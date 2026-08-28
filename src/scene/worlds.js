@@ -4,15 +4,29 @@ import gsap from 'gsap';
 const GOLDEN_ANGLE = 2.399963229728653;
 
 // Distribución en espiral acotada (tipo filotaxis): el radio crece con la
-// raíz del índice, así que aunque se agreguen cientos de mundos custom
-// nunca se sale del BOUNDARY_RADIUS del vuelo libre (ver flightControls.js).
-const MIN_RADIUS = 13;
-const RADIUS_GROWTH = 5.2;
+// raíz del índice, así que aunque se agreguen cientos de mundos nunca se
+// sale del BOUNDARY_RADIUS del vuelo libre (ver flightControls.js).
+//
+// Los mundos por defecto usan un anillo más lejano; los mundos creados por
+// el usuario (data.custom) usan un anillo propio, mucho más cerca del
+// spawn — así una carta recién creada es fácil de encontrar volando un
+// poco, en vez de perderse lejos en la espiral general.
+const DEFAULT_MIN_RADIUS = 13;
+const DEFAULT_RADIUS_GROWTH = 5.2;
+const CUSTOM_MIN_RADIUS = 7;
+const CUSTOM_RADIUS_GROWTH = 3.4;
 
-export function computeWorldPosition(index) {
-  const radius = MIN_RADIUS + Math.sqrt(index) * RADIUS_GROWTH;
+function computeDefaultPosition(index) {
+  const radius = DEFAULT_MIN_RADIUS + Math.sqrt(index) * DEFAULT_RADIUS_GROWTH;
   const angle = index * GOLDEN_ANGLE;
   const height = Math.sin(index * 1.35) * 6 + Math.cos(index * 0.5) * 4;
+  return new THREE.Vector3(Math.cos(angle) * radius, height, Math.sin(angle) * radius);
+}
+
+function computeCustomPosition(index) {
+  const radius = CUSTOM_MIN_RADIUS + Math.sqrt(index) * CUSTOM_RADIUS_GROWTH;
+  const angle = index * GOLDEN_ANGLE + 0.6; // desfasado del anillo de defaults
+  const height = Math.sin(index * 1.7) * 3 + Math.cos(index * 0.8) * 2;
   return new THREE.Vector3(Math.cos(angle) * radius, height, Math.sin(angle) * radius);
 }
 
@@ -142,15 +156,22 @@ export class WorldManager {
     this.scene = scene;
     this.worldGroups = new Map();
     this.hitMeshes = [];
-    this.orderedIds = [];
   }
 
   get(id) {
     return this.worldGroups.get(id);
   }
 
-  buildWorldObject(data, index, animateIn) {
-    const pos = computeWorldPosition(index);
+  // Próxima posición libre en el anillo (por defecto o custom) según
+  // cuántos mundos de ese mismo tipo ya existen en la escena.
+  _nextPosition(data) {
+    let count = 0;
+    this.worldGroups.forEach(w => { if (!!w.data.custom === !!data.custom) count++; });
+    return data.custom ? computeCustomPosition(count) : computeDefaultPosition(count);
+  }
+
+  buildWorldObject(data, animateIn, fixedPosition) {
+    const pos = fixedPosition || this._nextPosition(data);
     const group = new THREE.Group();
     group.position.copy(pos);
     this.scene.add(group);
@@ -209,22 +230,22 @@ export class WorldManager {
     this.hitMeshes.length = 0;
     this.worldGroups.forEach(w => this.scene.remove(w.group));
     this.worldGroups.clear();
-    this.orderedIds = worlds.map(w => w.id);
-    worlds.forEach((w, i) => this.buildWorldObject(w, i, false));
+    worlds.forEach(w => this.buildWorldObject(w, false));
   }
 
-  addWorld(data, index) {
-    this.orderedIds.push(data.id);
-    this.buildWorldObject(data, index, true);
+  addWorld(data) {
+    this.buildWorldObject(data, true);
   }
 
-  replaceWorld(id, newData, index) {
+  // Editar un mundo no debe moverlo de lugar: conserva la posición que ya tenía.
+  replaceWorld(id, newData) {
     const w = this.worldGroups.get(id);
     if (!w) return;
+    const keepPos = w.group.position.clone();
     this.scene.remove(w.group);
     this.worldGroups.delete(id);
     this.hitMeshes = this.hitMeshes.filter(h => h.userData.worldId !== id);
-    this.buildWorldObject(newData, index, true);
+    this.buildWorldObject(newData, true, keepPos);
   }
 
   removeWorld(id) {
@@ -232,7 +253,6 @@ export class WorldManager {
     if (!w) return;
     this.scene.remove(w.group);
     this.worldGroups.delete(id);
-    this.orderedIds = this.orderedIds.filter(x => x !== id);
     this.hitMeshes = this.hitMeshes.filter(h => h.userData.worldId !== id);
   }
 

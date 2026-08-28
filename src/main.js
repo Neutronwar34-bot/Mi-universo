@@ -82,14 +82,14 @@ const formUI = new WorldFormUI({
   onCreate: async (data) => {
     const created = await createWorld(data);
     worlds.push(created);
-    worldManager.addWorld(created, worlds.length - 1);
+    worldManager.addWorld(created);
     discoveryTracker.setTotal(worlds.length);
   },
   onUpdate: async (id, data) => {
     const updated = await updateWorld(id, data);
     const idx = worlds.findIndex(w => w.id === id);
     if (idx !== -1) worlds[idx] = updated;
-    worldManager.replaceWorld(id, updated, idx);
+    worldManager.replaceWorld(id, updated);
   }
 });
 document.getElementById('btn-create').addEventListener('click', () => formUI.open(null));
