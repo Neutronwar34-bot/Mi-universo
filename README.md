@@ -2,7 +2,7 @@
 
 Un pequeño universo navegable en 3D (Three.js + GSAP) donde cada planeta es
 una carta con un personaje estilo recorte de papel, inspirado en *El
-Principito*. Backend en Supabase, pensado para desplegarse en GitHub Pages.
+Principito*. Backend en Supabase, desplegado en Vercel.
 
 ## Estructura
 
@@ -77,14 +77,25 @@ de mundos por defecto local (`src/data/worldsStore.js`) para no quedar vacía.
 
 ## Música ambiente
 
-`src/data/track.json` define el título de la pista y la ruta del audio
-(`public/audio/ambient.mp3`). El tocadiscos empieza pausado (los navegadores
-bloquean autoplay con sonido) y si el archivo no existe lo indica en la UI
-en vez de romperse.
+`src/data/track.json` tiene un array `tracks` (título + ruta en
+`public/audio/`) que el tocadiscos reproduce en cola, avanzando solo al
+terminar cada una. El tocadiscos empieza pausado (los navegadores bloquean
+autoplay con sonido) y si un archivo no carga lo indica en la UI en vez de
+romperse. Para agregar música: soltar el mp3 en `public/audio/` y sumar su
+entrada en `track.json`.
 
-## Deploy
+## Deploy (Vercel)
 
-`.github/workflows/deploy.yml` hace build y publica en GitHub Pages en cada
-push a `main`. Hay que cargar `VITE_SUPABASE_URL` y
-`VITE_SUPABASE_PUBLISHABLE_KEY` como secrets del repo, y habilitar GitHub
-Pages con fuente "GitHub Actions" en la configuración del repo.
+El repo está listo para importarse tal cual en Vercel: framework "Vite",
+build command `npm run build`, output directory `dist` (Vercel lo detecta
+solo). No hace falta configurar variables de entorno en el dashboard de
+Vercel — la clave *publishable* de Supabase (segura de exponer, no es la
+secret key) ya viene embebida vía `.env.production`, que Vite carga en todo
+build de producción sin importar dónde se ejecute.
+
+Pasos: vercel.com → "Add New Project" → importar `Neutronwar34-bot/Mi-universo`
+→ Deploy. Cada push a `main` vuelve a desplegar solo.
+
+`vite.config.js` usa `base:'/'` porque Vercel sirve el sitio en la raíz del
+dominio (a diferencia de GitHub Pages, que lo servía bajo `/Mi-universo/` —
+ya no se usa GitHub Pages para este proyecto).

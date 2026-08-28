@@ -1,11 +1,10 @@
 import { defineConfig } from 'vite';
 
-// Repo se sirve en GitHub Pages como https://<user>.github.io/Mi-universo/,
-// así que en build necesita ese base path; en dev queda en la raíz.
-export default defineConfig(({ command }) => ({
-  base: command === 'build' ? '/Mi-universo/' : '/',
+// Vercel sirve el sitio en la raíz del dominio, así que base queda en '/'.
+export default defineConfig({
+  base: '/',
   server: {
     port: 5173,
     open: false
   }
-}));
+});
