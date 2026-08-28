@@ -5,20 +5,15 @@ import { supabase } from './supabaseClient.js';
 export const FALLBACK_WORLDS = [
   {
     id: 'rosa',
-    name: 'El Jardín de la Rosa Única',
-    subtitle: 'Para quien aprendí a regar cada día',
+    name: 'Mi rosa blanca',
+    subtitle: 'Mi hermosa Tami',
     letter:
-`Hay una rosa que crece distinta a todas las demás,
-no porque sea más bella,
-sino porque le dediqué tiempo.
+`La verdad aun no logro encontrar las palabras correctas para disculparme contigo, 
+se que me he equivocado, se que te he desepcionado, pero aun asi te amo, 
+supongo es humano desepcionar asi, desearia ser menos humano.
 
-Eso hice contigo: elegí regarte,
-elegí escucharte cuando te quejabas del viento,
-elegí ponerte un fanal las noches frías.
-
-Lo que se cuida se vuelve único.
-Y tú, para mí, ya eras irremplazable
-antes de que aprendiera a decírtelo bien.`,
+Has sido un gran jeemplo en muchas cosas, verte me llena de vitalidad, de voluntad para hacer las cosas,
+te amo mucho mi Tami.`,
     character: 'rose', colorA: '#f3c6d3', colorB: '#e08a9c', accent: '#c94f6d', size: 1.15, custom: false
   },
   {
