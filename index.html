@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Cartas para otro planeta</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9C%A8%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Caveat:wght@500;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<canvas id="scene"></canvas>
+
+<!-- Pantalla de carga -->
+<div id="loading">
+  <div id="loading-content">
+    <span id="loading-eyebrow">— para alguien, en algún lugar del universo —</span>
+    <div id="loading-track"><div id="loading-bar"></div></div>
+    <span id="loading-label">Cargando…</span>
+  </div>
+</div>
+
+<div id="intro">
+  <span class="eyebrow">— para alguien, en algún lugar del universo —</span>
+  <h1>Un puñado de cartas escondidas entre las estrellas</h1>
+  <p>Cada planeta guarda un mensaje. Pilotea tu nave, acércate a cada mundo, y quédate el tiempo que necesites leyendo.</p>
+  <button class="btn btn-primary" id="intro-start">Comenzar el viaje ✦</button>
+</div>
+
+<div id="ui">
+  <div id="top-bar">
+    <div id="brand">
+      <span class="title">Cartas para otro planeta</span>
+      <span class="sub">un pequeño universo de palabras</span>
+    </div>
+    <div id="top-bar-right">
+      <span id="discovery-counter" class="discovery-counter"></span>
+      <button class="btn" id="btn-create">＋ Crear un mundo</button>
+    </div>
+  </div>
+
+  <div id="hint">WASD para moverte · arrastra para mirar · acércate a un mundo para leerlo</div>
+
+  <button class="btn-icon" id="respawn-btn" aria-label="Volver al punto de partida" title="Volver al punto de partida">⟲</button>
+
+  <!-- Prompt de proximidad: aparece al acercarse a un planeta -->
+  <div id="proximity-prompt">
+    <span id="proximity-name"></span>
+    <button class="btn btn-primary" id="proximity-btn">Ver planeta ✦</button>
+  </div>
+
+  <div id="toast"></div>
+
+  <!-- Controles táctiles (solo pantallas táctiles, ver CSS) -->
+  <div id="mobile-controls">
+    <div id="dpad">
+      <button class="dpad-btn dpad-up" data-dir="forward" aria-label="Adelante">▲</button>
+      <button class="dpad-btn dpad-left" data-dir="left" aria-label="Izquierda">◀</button>
+      <button class="dpad-btn dpad-right" data-dir="right" aria-label="Derecha">▶</button>
+      <button class="dpad-btn dpad-down" data-dir="back" aria-label="Atrás">▼</button>
+    </div>
+    <div id="vctrl">
+      <button class="vctrl-btn" data-dir="up" aria-label="Subir">⤒</button>
+      <button class="vctrl-btn" data-dir="down" aria-label="Bajar">⤓</button>
+    </div>
+  </div>
+
+  <!-- Tocadiscos -->
+  <div id="record-player">
+    <button id="record-play-btn" class="record-disc" aria-label="Reproducir música ambiente">
+      <span class="record-disc__ring"></span>
+      <span class="record-disc__label"></span>
+      <span class="record-arm"></span>
+    </button>
+    <div class="record-info">
+      <span id="record-track-name" class="record-track-name">Música ambiente</span>
+      <span class="record-hint">▶ tocar música</span>
+    </div>
+  </div>
+</div>
+
+<audio id="audio-ambient" preload="none"></audio>
+
+<!-- Vista de superficie: se abre al acercarse a un planeta -->
+<div id="surface-view">
+  <div id="surface-backdrop"></div>
+  <div id="surface-ground"></div>
+  <div id="surface-character-wrap">
+    <canvas id="surface-character" width="256" height="256"></canvas>
+  </div>
+  <div id="surface-dialogue">
+    <button id="surface-close" aria-label="Volver al espacio">✕</button>
+    <p id="surface-eyebrow"></p>
+    <h2 id="surface-title"></h2>
+    <p id="surface-subtitle"></p>
+    <div id="surface-body"></div>
+    <div id="surface-footer">
+      <button class="btn-text" id="btn-edit-world-surface" style="display:none;">Editar mundo</button>
+      <button class="btn-text danger" id="btn-delete-world-surface" style="display:none;">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Create / edit world form -->
+<div id="form-wrap">
+  <div id="form-backdrop"></div>
+  <div id="form-card">
+    <h3 id="form-title">Crear un mundo nuevo</h3>
+    <p id="form-desc">Dale nombre a un planeta y escríbele una carta. Quedará flotando en tu universo, para siempre (o hasta que decidas cambiarlo).</p>
+
+    <div class="field">
+      <label for="f-name">Nombre del mundo</label>
+      <input type="text" id="f-name" maxlength="60" placeholder="El planeta de las tardes de domingo">
+    </div>
+    <div class="field">
+      <label for="f-subtitle">Subtítulo</label>
+      <input type="text" id="f-subtitle" maxlength="90" placeholder="Sobre lo que nunca te dije">
+    </div>
+    <div class="field">
+      <label for="f-letter">La carta</label>
+      <textarea id="f-letter" maxlength="1400" placeholder="Escribe aquí lo que quieras dejarle a quien visite este mundo..."></textarea>
+    </div>
+
+    <div class="field">
+      <label>Personaje del mundo</label>
+      <div id="char-preview"></div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="f-color1">Color del planeta</label>
+        <div class="color-field"><input type="color" id="f-color1" value="#e8b4bc"><span>principal</span></div>
+      </div>
+      <div class="field">
+        <label for="f-color2">Color del acento</label>
+        <div class="color-field"><input type="color" id="f-color2" value="#8a6bbf"><span>personaje</span></div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="f-size">Tamaño del planeta <span class="range-value" id="f-size-val">1.15</span></label>
+      <input type="range" id="f-size" min="0.7" max="1.9" step="0.05" value="1.15">
+    </div>
+
+    <div id="form-actions">
+      <button class="btn-ghost-small" id="btn-cancel-form">Cancelar</button>
+      <button class="btn btn-primary" id="btn-submit-form">Crear mundo ✦</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>

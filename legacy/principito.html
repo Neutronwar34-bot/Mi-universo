@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Cartas para otro planeta</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9C%A8%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Caveat:wght@500;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#080a17;
+    --bg-deep:#050612;
+    --parchment:#f4ead2;
+    --parchment-dark:#e8d9b3;
+    --ink:#3b2c1a;
+    --ink-soft:#6b5738;
+    --gold:#d9a94f;
+    --rose:#d98a92;
+    --teal:#7fb3a3;
+    --glass-bg:rgba(20,20,40,0.35);
+    --glass-border:rgba(244,234,210,0.18);
+    --shadow-deep:0 20px 60px rgba(0,0,0,0.55);
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;height:100%;width:100%;overflow:hidden;
+    background:var(--bg);
+    color:var(--parchment);
+    font-family:'Jost',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  #scene{position:fixed;inset:0;display:block;touch-action:none;outline:none;}
+
+  #ui{position:fixed;inset:0;pointer-events:none;z-index:5;}
+  #ui *{pointer-events:auto;}
+  #ui .no-events{pointer-events:none;}
+
+  /* ---------- Intro ---------- */
+  #intro{
+    position:fixed;inset:0;z-index:50;
+    display:flex;align-items:center;justify-content:center;flex-direction:column;
+    text-align:center;padding:24px;
+    background:radial-gradient(ellipse at 50% 40%, rgba(60,50,100,0.35), rgba(4,5,14,0.96) 70%);
+  }
+  #intro .eyebrow{
+    font-family:'Caveat',cursive;font-size:clamp(1.1rem,3vw,1.5rem);color:var(--gold);
+    letter-spacing:.04em;margin-bottom:6px;opacity:0;
+  }
+  #intro h1{
+    font-family:'Cormorant Garamond',serif;font-weight:500;
+    font-size:clamp(2.2rem,7vw,4.4rem);line-height:1.05;margin:0 0 18px;
+    max-width:15ch;opacity:0;
+  }
+  #intro p{
+    font-size:clamp(.95rem,2vw,1.1rem);color:rgba(244,234,210,0.75);
+    max-width:42ch;line-height:1.6;margin:0 0 34px;opacity:0;
+  }
+  #intro button{opacity:0;}
+
+  /* ---------- Buttons ---------- */
+  .btn{
+    font-family:'Jost',sans-serif;font-size:.92rem;font-weight:500;letter-spacing:.03em;
+    color:var(--parchment);background:var(--glass-bg);
+    border:1px solid var(--glass-border);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    padding:13px 26px;border-radius:100px;cursor:pointer;
+    transition:transform .25s ease, background .25s ease, border-color .25s ease;
+    white-space:nowrap;
+  }
+  .btn:hover{background:rgba(217,169,79,0.16);border-color:rgba(217,169,79,0.4);transform:translateY(-2px);}
+  .btn:active{transform:translateY(0);}
+  .btn-primary{
+    background:linear-gradient(135deg,var(--gold),#c98a3f);
+    color:#2a1c08;border:none;font-weight:600;
+    box-shadow:0 8px 24px rgba(217,169,79,0.3);
+  }
+  .btn-primary:hover{background:linear-gradient(135deg,#e6bb63,var(--gold));transform:translateY(-2px);}
+  .btn-ghost-small{
+    background:transparent;border:1px solid var(--glass-border);color:var(--parchment);
+    padding:9px 16px;border-radius:100px;font-size:.82rem;cursor:pointer;
+  }
+  .btn-ghost-small:hover{border-color:var(--gold);color:var(--gold);}
+  .btn-icon{
+    width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    background:var(--glass-bg);border:1px solid var(--glass-border);color:var(--parchment);
+    cursor:pointer;font-size:1.1rem;backdrop-filter:blur(14px);
+  }
+  .btn-icon:hover{border-color:var(--gold);color:var(--gold);}
+
+  /* ---------- Top bar ---------- */
+  #top-bar{
+    position:absolute;top:0;left:0;right:0;
+    display:flex;justify-content:space-between;align-items:flex-start;
+    padding:clamp(16px,3.5vw,34px);gap:14px;flex-wrap:wrap;
+    opacity:0;
+  }
+  #brand{font-family:'Cormorant Garamond',serif;line-height:1.15;}
+  #brand .title{font-size:clamp(1.05rem,2vw,1.35rem);letter-spacing:.05em;font-weight:500;}
+  #brand .sub{font-family:'Caveat',cursive;font-size:clamp(.95rem,1.8vw,1.15rem);color:var(--gold);display:block;}
+
+  /* ---------- Hint ---------- */
+  #hint{
+    position:absolute;bottom:26px;left:50%;transform:translateX(-50%);
+    font-size:.82rem;color:rgba(244,234,210,0.55);letter-spacing:.03em;
+    text-align:center;opacity:0;transition:opacity .6s ease;
+  }
+
+  /* ---------- Return button ---------- */
+  #return-btn{
+    position:absolute;top:clamp(16px,3.5vw,34px);left:50%;transform:translate(-50%,-140%);
+    opacity:0;z-index:20;
+  }
+
+  /* ---------- Toast ---------- */
+  #toast{
+    position:absolute;top:14px;left:50%;transform:translate(-50%,-60px);
+    background:rgba(20,16,10,0.85);border:1px solid rgba(217,169,79,0.4);
+    padding:10px 22px;border-radius:100px;font-size:.85rem;color:var(--gold);
+    opacity:0;z-index:60;
+  }
+
+  /* ---------- Letter modal ---------- */
+  #letter-wrap{
+    position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;
+    padding:20px;display:none;
+  }
+  #letter-backdrop{position:absolute;inset:0;background:rgba(4,5,14,0.55);backdrop-filter:blur(2px);}
+  #letter-card{
+    position:relative;
+    width:min(94vw,600px);max-height:min(86vh,720px);
+    background:
+      radial-gradient(circle at 15% 10%, rgba(255,255,255,0.5), transparent 40%),
+      linear-gradient(180deg,var(--parchment),var(--parchment-dark));
+    background-blend-mode:overlay, normal;
+    border-radius:6px 18px 6px 18px;
+    box-shadow:var(--shadow-deep), 0 0 0 1px rgba(255,255,255,0.4) inset;
+    padding:clamp(26px,5vw,46px) clamp(24px,5vw,50px);
+    display:flex;flex-direction:column;
+    color:var(--ink);
+  }
+  #letter-card::before{
+    content:'';position:absolute;inset:10px;border:1px solid rgba(59,44,26,0.15);
+    border-radius:4px 14px 4px 14px;pointer-events:none;
+  }
+  #letter-card .seal{
+    position:absolute;top:-16px;right:26px;width:44px;height:44px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%,#e8a2ab,var(--rose));
+    box-shadow:0 6px 14px rgba(0,0,0,0.3);
+    display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:#fff2f2;
+  }
+  #letter-close{
+    position:absolute;top:14px;right:16px;background:none;border:none;cursor:pointer;
+    font-size:1.3rem;color:var(--ink-soft);width:34px;height:34px;border-radius:50%;
+  }
+  #letter-close:hover{background:rgba(59,44,26,0.08);color:var(--ink);}
+  #letter-eyebrow{
+    font-family:'Caveat',cursive;color:var(--ink-soft);font-size:1.15rem;margin:0 0 2px;
+  }
+  #letter-title{
+    font-family:'Cormorant Garamond',serif;font-weight:600;font-size:clamp(1.5rem,4vw,2.15rem);
+    margin:0 0 4px;line-height:1.15;padding-right:40px;
+  }
+  #letter-subtitle{
+    font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.05rem;
+    color:var(--ink-soft);margin:0 0 18px;
+  }
+  #letter-body{
+    font-family:'Caveat',cursive;font-size:clamp(1.15rem,2.4vw,1.4rem);line-height:1.55;
+    white-space:pre-line;overflow-y:auto;padding-right:6px;flex:1;
+  }
+  #letter-body::-webkit-scrollbar{width:5px;}
+  #letter-body::-webkit-scrollbar-thumb{background:rgba(59,44,26,0.25);border-radius:4px;}
+  #letter-footer{
+    display:flex;justify-content:space-between;align-items:center;gap:10px;
+    margin-top:20px;padding-top:16px;border-top:1px dashed rgba(59,44,26,0.25);flex-wrap:wrap;
+  }
+  #letter-footer .left-actions,#letter-footer .right-actions{display:flex;gap:8px;flex-wrap:wrap;}
+  .btn-dark{
+    font-family:'Jost',sans-serif;font-size:.82rem;font-weight:500;color:var(--parchment);
+    background:var(--ink);border:none;padding:11px 20px;border-radius:100px;cursor:pointer;
+    transition:transform .2s ease, background .2s ease;
+  }
+  .btn-dark:hover{background:#523d21;transform:translateY(-1px);}
+  .btn-text{
+    font-family:'Jost',sans-serif;font-size:.8rem;color:var(--ink-soft);background:none;border:none;
+    cursor:pointer;text-decoration:underline;padding:8px 4px;
+  }
+  .btn-text:hover{color:var(--ink);}
+  .btn-text.danger{color:#a8453f;}
+
+  /* ---------- Create / Edit world panel ---------- */
+  #form-wrap{
+    position:fixed;inset:0;z-index:40;display:none;align-items:center;justify-content:center;padding:20px;
+  }
+  #form-backdrop{position:absolute;inset:0;background:rgba(4,5,14,0.7);backdrop-filter:blur(3px);}
+  #form-card{
+    position:relative;width:min(94vw,560px);max-height:90vh;overflow-y:auto;
+    background:var(--bg-deep);border:1px solid var(--glass-border);
+    border-radius:20px;padding:clamp(24px,5vw,40px);box-shadow:var(--shadow-deep);
+  }
+  #form-card::-webkit-scrollbar{width:5px;}
+  #form-card::-webkit-scrollbar-thumb{background:rgba(217,169,79,0.35);border-radius:4px;}
+  #form-title{
+    font-family:'Cormorant Garamond',serif;font-size:clamp(1.4rem,4vw,1.85rem);margin:0 0 4px;font-weight:500;
+  }
+  #form-desc{font-size:.85rem;color:rgba(244,234,210,0.6);margin:0 0 22px;line-height:1.5;}
+  .field{margin-bottom:18px;}
+  .field label{display:block;font-size:.78rem;letter-spacing:.04em;text-transform:uppercase;color:var(--gold);margin-bottom:7px;}
+  .field input[type=text],.field textarea,.field select{
+    width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--glass-border);
+    border-radius:10px;padding:12px 14px;color:var(--parchment);font-family:'Jost',sans-serif;font-size:.92rem;
+  }
+  .field textarea{
+    font-family:'Caveat',cursive;font-size:1.2rem;line-height:1.4;min-height:120px;resize:vertical;
+  }
+  .field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--gold);}
+  .field-row{display:flex;gap:14px;}
+  .field-row .field{flex:1;}
+  .color-field{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.05);border:1px solid var(--glass-border);border-radius:10px;padding:8px 12px;}
+  .color-field input[type=color]{width:36px;height:36px;border:none;background:none;padding:0;border-radius:8px;cursor:pointer;}
+  .color-field span{font-size:.85rem;color:rgba(244,234,210,0.7);}
+  .range-value{font-size:.78rem;color:rgba(244,234,210,0.55);float:right;}
+  .field input[type=range]{width:100%;accent-color:var(--gold);}
+  #char-preview{
+    display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;
+  }
+  .char-chip{
+    display:flex;align-items:center;gap:6px;padding:8px 13px;border-radius:100px;
+    border:1px solid var(--glass-border);background:rgba(255,255,255,0.04);
+    font-size:.82rem;cursor:pointer;transition:.2s ease;
+  }
+  .char-chip:hover{border-color:rgba(217,169,79,0.5);}
+  .char-chip.active{background:rgba(217,169,79,0.18);border-color:var(--gold);color:var(--gold);}
+  #form-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:8px;flex-wrap:wrap;}
+
+  /* ---------- Responsive ---------- */
+  @media (max-width:560px){
+    #top-bar{padding:14px;}
+    #letter-footer{flex-direction:column;align-items:stretch;}
+    #letter-footer .left-actions,#letter-footer .right-actions{justify-content:center;}
+    .field-row{flex-direction:column;gap:0;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation-duration:.001ms !important;transition-duration:.001ms !important;}
+  }
+</style>
+</head>
+<body>
+
+<canvas id="scene"></canvas>
+
+<div id="intro">
+  <span class="eyebrow">— para alguien, en algún lugar del universo —</span>
+  <h1>Un puñado de cartas escondidas entre las estrellas</h1>
+  <p>Cada planeta guarda un mensaje. Muévete despacio, acércate a cada mundo, y quédate el tiempo que necesites leyendo.</p>
+  <button class="btn btn-primary" id="intro-start">Comenzar el viaje ✦</button>
+</div>
+
+<div id="ui">
+  <div id="top-bar">
+    <div id="brand">
+      <span class="title">Cartas para otro planeta</span>
+      <span class="sub">un pequeño universo de palabras</span>
+    </div>
+    <button class="btn" id="btn-create">＋ Crear un mundo</button>
+  </div>
+
+  <div id="hint">arrastra para orbitar · toca un mundo para leer su carta</div>
+
+  <button class="btn btn-primary" id="return-btn">← Volver al espacio</button>
+
+  <div id="toast"></div>
+</div>
+
+<!-- Letter modal -->
+<div id="letter-wrap">
+  <div id="letter-backdrop"></div>
+  <div id="letter-card">
+    <div class="seal">✦</div>
+    <button id="letter-close" aria-label="Cerrar">✕</button>
+    <p id="letter-eyebrow"></p>
+    <h2 id="letter-title"></h2>
+    <p id="letter-subtitle"></p>
+    <div id="letter-body"></div>
+    <div id="letter-footer">
+      <div class="left-actions">
+        <button class="btn-text" id="btn-edit-world" style="display:none;">Editar mundo</button>
+        <button class="btn-text danger" id="btn-delete-world" style="display:none;">Eliminar</button>
+      </div>
+      <div class="right-actions">
+        <button class="btn-dark" id="btn-next-world">Mundo siguiente →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create / edit world form -->
+<div id="form-wrap">
+  <div id="form-backdrop"></div>
+  <div id="form-card">
+    <h3 id="form-title">Crear un mundo nuevo</h3>
+    <p id="form-desc">Dale nombre a un planeta y escríbele una carta. Quedará flotando en tu universo, para siempre (o hasta que decidas cambiarlo).</p>
+
+    <div class="field">
+      <label for="f-name">Nombre del mundo</label>
+      <input type="text" id="f-name" maxlength="60" placeholder="El planeta de las tardes de domingo">
+    </div>
+    <div class="field">
+      <label for="f-subtitle">Subtítulo</label>
+      <input type="text" id="f-subtitle" maxlength="90" placeholder="Sobre lo que nunca te dije">
+    </div>
+    <div class="field">
+      <label for="f-letter">La carta</label>
+      <textarea id="f-letter" maxlength="1400" placeholder="Escribe aquí lo que quieras dejarle a quien visite este mundo..."></textarea>
+    </div>
+
+    <div class="field">
+      <label>Personaje del mundo</label>
+      <div id="char-preview"></div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="f-color1">Color del planeta</label>
+        <div class="color-field"><input type="color" id="f-color1" value="#e8b4bc"><span>principal</span></div>
+      </div>
+      <div class="field">
+        <label for="f-color2">Color del acento</label>
+        <div class="color-field"><input type="color" id="f-color2" value="#8a6bbf"><span>personaje</span></div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="f-size">Tamaño del planeta <span class="range-value" id="f-size-val">1.15</span></label>
+      <input type="range" id="f-size" min="0.7" max="1.9" step="0.05" value="1.15">
+    </div>
+
+    <div id="form-actions">
+      <button class="btn-ghost-small" id="btn-cancel-form">Cancelar</button>
+      <button class="btn btn-primary" id="btn-submit-form">Crear mundo ✦</button>
+    </div>
+  </div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+/* =========================================================================
+   1. CONTENIDO DE LOS MUNDOS  (edítalo libremente)
+   ========================================================================= */
+const DEFAULT_WORLDS = [
+  {
+    id: 'rosa',
+    name: 'El Jardín de la Rosa Única',
+    subtitle: 'Para quien aprendí a regar cada día',
+    letter:
+`Hay una rosa que crece distinta a todas las demás,
+no porque sea más bella,
+sino porque le dediqué tiempo.
+
+Eso hice contigo: elegí regarte,
+elegí escucharte cuando te quejabas del viento,
+elegí ponerte un fanal las noches frías.
+
+Lo que se cuida se vuelve único.
+Y tú, para mí, ya eras irremplazable
+antes de que aprendiera a decírtelo bien.`,
+    character: 'rose',
+    colorA: '#f3c6d3',
+    colorB: '#e08a9c',
+    accent: '#c94f6d',
+    size: 1.15
+  },
+  {
+    id: 'farolero',
+    name: 'El Planeta del Farolero',
+    subtitle: 'Sobre la fidelidad a las pequeñas tareas',
+    letter:
+`En este mundo hay alguien que enciende y apaga un farol,
+una y otra vez, sin preguntarse por qué.
+Cumple su consigna. Eso es lo que lo hace hermoso.
+
+Quiero que sepas que las cosas pequeñas que hiciste por mí
+—llamar quince minutos antes de dormir,
+guardar el último trozo de algo que me gustaba—
+nunca me parecieron pequeñas.
+
+Eran tu manera de encender el farol
+en un planeta que giraba sólo para los dos.`,
+    character: 'lamplighter',
+    colorA: '#f6d98b',
+    colorB: '#e0a13f',
+    accent: '#c9752f',
+    size: 1.0
+  },
+  {
+    id: 'zorro',
+    name: 'La Madriguera del Zorro',
+    subtitle: 'Lo esencial es invisible a los ojos',
+    letter:
+`Domesticar significa crear lazos.
+El zorro me enseñó eso, y yo te lo aprendí a ti:
+que el tiempo que perdemos por alguien
+es justamente el que lo vuelve importante.
+
+Ahora, cuando el trigo se mueva con el viento,
+quiero que te acuerdes de mí,
+del color de mis palabras,
+de las tardes que no servían para nada
+y por eso eran perfectas.
+
+No busques con los ojos. Busca con lo que sientes.
+Ahí voy a seguir estando.`,
+    character: 'fox',
+    colorA: '#f0b27a',
+    colorB: '#c97a3d',
+    accent: '#7a4a22',
+    size: 1.2
+  },
+  {
+    id: 'rey',
+    name: 'El Reino sin Súbditos',
+    subtitle: 'Sobre el poder de ser justo con uno mismo',
+    letter:
+`Un rey que no tiene a quién gobernar
+igual sigue dando órdenes razonables:
+le pide al sol que se ponga cuando ya se estaba poniendo.
+
+Aprendí, viéndote, que el verdadero poder
+no es imponerse a los demás,
+sino ser justo contigo mismo primero.
+
+Ojalá gobiernes tu propia vida así:
+con la calma de quien sólo pide
+lo que de todas formas ya iba a suceder,
+y con la valentía de cambiar
+lo que no.`,
+    character: 'king',
+    colorA: '#cbb6e4',
+    colorB: '#8a6bbf',
+    accent: '#5c3f96',
+    size: 1.1
+  },
+  {
+    id: 'astronomo',
+    name: 'El Observatorio de las Estrellas',
+    subtitle: 'Cada estrella que ves ya fue contada por alguien que te quiso',
+    letter:
+`Si alguna vez, de noche, levantas la vista
+y ves un cielo lleno de estrellas,
+quiero que sepas que una de ellas soy yo, riendo.
+
+Para ti será distinto mirar las estrellas
+que para los demás,
+porque en una de ellas —en una cualquiera, en todas—
+voy a estar viviendo,
+voy a estar riendo,
+
+y entonces será como si todas las estrellas rieran
+cuando mires el cielo por la noche.
+Tú tendrás estrellas que ríen.`,
+    character: 'star',
+    colorA: '#9fd8df',
+    colorB: '#4f8ea6',
+    accent: '#2e6577',
+    size: 1.3
+  }
+];
+
+const CHAR_LABELS = {
+  rose: '🌹 Rosa', fox: '🦊 Zorro', king: '👑 Rey', lamplighter: '🏮 Farolero',
+  star: '⭐ Estrella', bird: '🐦 Ave', moon: '🌙 Luna', book: '📖 Narrador'
+};
+
+/* =========================================================================
+   2. ESTADO Y PERSISTENCIA
+   ========================================================================= */
+const STORAGE_KEY = 'principito_worlds_v1';
+function loadCustomWorlds(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  }catch(e){ return []; }
+}
+function saveCustomWorlds(list){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); }catch(e){}
+}
+let customWorlds = loadCustomWorlds();
+let worlds = [...DEFAULT_WORLDS, ...customWorlds];
+
+function persistCustom(){
+  saveCustomWorlds(worlds.filter(w => w.custom));
+}
+
+/* =========================================================================
+   3. THREE.JS - ESCENA BASE
+   ========================================================================= */
+const canvas = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:false });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.15;
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x080a17, 0.0032);
+
+const camera = new THREE.PerspectiveCamera(52, window.innerWidth/window.innerHeight, 0.1, 800);
+const HOME_POS = new THREE.Vector3(0, 5, 30);
+const HOME_TARGET = new THREE.Vector3(0, 0, 0);
+camera.position.copy(HOME_POS);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.06;
+controls.minDistance = 6;
+controls.maxDistance = 70;
+controls.target.copy(HOME_TARGET);
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.22;
+controls.enabled = false;
+
+const ambient = new THREE.AmbientLight(0xffffff, 1.0);
+scene.add(ambient);
+const keyLight = new THREE.PointLight(0xfff2d9, 1.4, 300);
+keyLight.position.set(30, 40, 20);
+scene.add(keyLight);
+const rimLight = new THREE.PointLight(0x8fa8ff, 0.6, 300);
+rimLight.position.set(-40, -20, -30);
+scene.add(rimLight);
+
+/* ---------- Starfield ---------- */
+function buildStarfield(count, radiusMin, radiusMax, size, opacity){
+  const geo = new THREE.BufferGeometry();
+  const positions = new Float32Array(count*3);
+  const colors = new Float32Array(count*3);
+  const palette = [
+    new THREE.Color('#ffffff'), new THREE.Color('#dfe6ff'),
+    new THREE.Color('#ffe9c7'), new THREE.Color('#e6d8ff')
+  ];
+  for(let i=0;i<count;i++){
+    const r = radiusMin + Math.random()*(radiusMax-radiusMin);
+    const theta = Math.random()*Math.PI*2;
+    const phi = Math.acos((Math.random()*2)-1);
+    positions[i*3] = r*Math.sin(phi)*Math.cos(theta);
+    positions[i*3+1] = r*Math.sin(phi)*Math.sin(theta);
+    positions[i*3+2] = r*Math.cos(phi);
+    const c = palette[Math.floor(Math.random()*palette.length)];
+    colors[i*3]=c.r; colors[i*3+1]=c.g; colors[i*3+2]=c.b;
+  }
+  geo.setAttribute('position', new THREE.BufferAttribute(positions,3));
+  geo.setAttribute('color', new THREE.BufferAttribute(colors,3));
+  const mat = new THREE.PointsMaterial({
+    size, vertexColors:true, transparent:true, opacity,
+    sizeAttenuation:true, depthWrite:false
+  });
+  return new THREE.Points(geo, mat);
+}
+const starsNear = buildStarfield(2600, 60, 260, 0.55, 0.9);
+const starsFar = buildStarfield(1800, 260, 500, 1.1, 0.55);
+scene.add(starsNear, starsFar);
+
+/* ---------- Nebula ---------- */
+function makeNebulaTexture(colorA, colorB){
+  const c = document.createElement('canvas'); c.width=c.height=512;
+  const ctx = c.getContext('2d');
+  const g = ctx.createRadialGradient(256,256,0,256,256,256);
+  g.addColorStop(0, colorA);
+  g.addColorStop(0.45, colorB);
+  g.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,512,512);
+  return new THREE.CanvasTexture(c);
+}
+function addNebula(colorA, colorB, pos, scale, opacity){
+  const tex = makeNebulaTexture(colorA, colorB);
+  const mat = new THREE.SpriteMaterial({ map:tex, transparent:true, opacity, blending:THREE.AdditiveBlending, depthWrite:false });
+  const sprite = new THREE.Sprite(mat);
+  sprite.position.copy(pos);
+  sprite.scale.set(scale, scale, 1);
+  scene.add(sprite);
+  return sprite;
+}
+const nebulae = [
+  addNebula('rgba(140,110,220,0.55)','rgba(60,40,120,0)', new THREE.Vector3(-90,30,-160), 260, 0.5),
+  addNebula('rgba(217,138,146,0.5)','rgba(120,40,70,0)', new THREE.Vector3(120,-40,-200), 300, 0.4),
+  addNebula('rgba(127,179,163,0.5)','rgba(30,80,70,0)', new THREE.Vector3(0,90,-260), 340, 0.35),
+];
+
+/* =========================================================================
+   4. PERSONAJES DE PAPEL (estilo Paper Mario)
+   ========================================================================= */
+function baseCanvas(){
+  const c = document.createElement('canvas'); c.width=256; c.height=256;
+  return { c, ctx:c.getContext('2d') };
+}
+function outlinedPath(ctx, drawPathFn, fill, outline){
+  ctx.lineJoin='round'; ctx.lineCap='round';
+  ctx.strokeStyle = outline; ctx.lineWidth = 7;
+  drawPathFn(); ctx.stroke();
+  ctx.fillStyle = fill;
+  drawPathFn(); ctx.fill();
+}
+const OUTLINE = '#fdf6e3';
+
+const CHAR_DRAWERS = {
+  rose(ctx, main, accent){
+    ctx.save(); ctx.translate(128,210);
+    // stem
+    outlinedPath(ctx, ()=>{ ctx.beginPath(); ctx.moveTo(0,0); ctx.quadraticCurveTo(10,-40,-4,-78); ctx.lineTo(6,-78); ctx.quadraticCurveTo(20,-40,10,0); ctx.closePath(); }, '#8bb06a', OUTLINE);
+    ctx.translate(0,-96);
+    for(let i=0;i<6;i++){
+      const ang = (i/6)*Math.PI*2;
+      const x = Math.cos(ang)*30, y = Math.sin(ang)*22;
+      outlinedPath(ctx, ()=>{ ctx.beginPath(); ctx.ellipse(x,y,26,20,ang,0,Math.PI*2); }, main, OUTLINE);
+    }
+    outlinedPath(ctx, ()=>{ ctx.beginPath(); ctx.arc(0,0,26,0,Math.PI*2); }, accent, OUTLINE);
+    ctx.restore();
+  },
+  fox(ctx, main, accent){
+    ctx.save(); ctx.translate(128,190);
+    outlinedPath(ctx, ()=>{ ctx.beginPath(); ctx.moveTo(-70,10); ctx.quadraticCurveTo(-90,-30,-40,-40); ctx.quadraticCurveTo(-10,-70,40,-60); ctx.quadraticCurveTo(90,-40,60,10); ctx.quadraticCurveTo(0,40,-70,10); ctx.closePath(); }, main, OUTLINE);
+    outlinedPath(ctx, ()=>{ ctx.beginPath(); ctx.moveTo(-30,-52); ctx.lineTo(-48,-96); ctx.lineTo(-8,-64); ctx.closePath(); }, main, OUTLINE);
+    outlinedPath(ctx, ()=>{ ctx.beginPath(); ctx.moveTo(24,-58); ctx.lineTo(44,-100); ctx.lineTo(58,-56); ctx.closePath(); }, main, OUTLINE);
+    outlinedPath(ctx, ()=>{ ctx.beginPath(); ctx.ellipse(10,-10,26,18,0.1,0,Math.PI*2); }, '#fdf6e3', OUTLINE);
+    outlinedPath(ctx, ()=>{ ctx.beginPath(); ctx.moveTo(-80,20); ctx.quadraticCurveTo(-120,10,-110,-30); ctx.quadraticCurveTo(-95,-10,-70,10); ctx.closePath(); }, accent, OUTLINE);
+    ctx.fillStyle='#2b1c10'; ctx.beginPath(); ctx.arc(-6,-30,5,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(26,-34,5,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  },
+  king(ctx, main, accent){
+    ctx.save(); ctx.translate(128,220);
+    outlinedPath(ctx, ()=>{ ctx.beginPath(); ctx.moveTo(-56,-10); ctx.lineTo(-30,-110); ctx.lineTo(30,-110); ctx.lineTo(56,-10); ctx.closePath(); }, main, OUTLINE);
+    outlinedPath(ctx, ()=>{ ctx.beginPath(); ctx.arc(0,-128,30,0,Math.PI*2); }, '#f0d3a8', OUTLINE);
+    outlinedPath(ctx, ()=>{ ctx.beginPath(); ctx.moveTo(-30,-150); ctx.lineTo(-30,-172); ctx.lineTo(-16,-158); ctx.lineTo(0,-178); ctx.lineTo(16,-158); ctx.lineTo(30,-172); ctx.lineTo(30,-150); ctx.closePath(); }, accent, OUTLINE);
+    ctx.fillStyle='#2b1c10'; ctx.beginPath(); ctx.arc(-10,-128,4,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(10,-128,4,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  },
+  lamplighter(ctx, main, accent){
+    ctx.save(); ctx.translate(128,220);
+    outlinedPath(ctx, ()=>{ ctx.beginPath(); ctx.roundRect(-34,-96,68,96,10); }, main, OUTLINE);
+    outlinedPath(ctx, ()=>{ ctx.beginPath(); ctx.arc(0,-116,26,0,Math.PI*2); }, '#f0d3a8', OUTLINE);
+    outlinedPath(ctx, ()=>{ ctx.beginPath(); ctx.roundRect(-26,-146,52,16,6); }, accent, OUTLINE);
+    outlinedPath(ctx, ()=>{ ctx.beginPath(); ctx.roundRect(44,-70,20,30,4); }, '#5c4a30', OUTLINE);
+    ctx.save();
+    ctx.fillStyle = accent; ctx.globalAlpha=0.9;
+    ctx.beginPath(); ctx.arc(54,-84,14,0,Math.PI*2); ctx.fill();
+    ctx.globalAlpha=0.35; ctx.beginPath(); ctx.arc(54,-84,24,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+    ctx.fillStyle='#2b1c10'; ctx.beginPath(); ctx.arc(-8,-118,4,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(8,-118,4,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  },
+  star(ctx, main, accent){
+    ctx.save(); ctx.translate(128,180);
+    function starPath(r1,r2){
+      ctx.beginPath();
+      for(let i=0;i<10;i++){
+        const ang = (i/10)*Math.PI*2 - Math.PI/2;
+        const r = i%2===0 ? r1 : r2;
+        const x = Math.cos(ang)*r, y = Math.sin(ang)*r;
+        i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+      }
+      ctx.closePath();
+    }
+    outlinedPath(ctx, ()=>starPath(70,32), main, OUTLINE);
+    ctx.fillStyle=accent; starPath(30,14); ctx.fill();
+    ctx.fillStyle='#2b1c10'; ctx.beginPath(); ctx.arc(-14,4,4,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(14,4,4,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='#2b1c10'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(0,16,10,0.15*Math.PI,0.85*Math.PI); ctx.stroke();
+    ctx.restore();
+  },
+  bird(ctx, main, accent){
+    ctx.save(); ctx.translate(128,200);
+    outlinedPath(ctx, ()=>{ ctx.beginPath(); ctx.ellipse(0,0,46,34,0,0,Math.PI*2); }, main, OUTLINE);
+    outlinedPath(ctx, ()=>{ ctx.beginPath(); ctx.moveTo(0,-10); ctx.quadraticCurveTo(60,-40,50,10); ctx.quadraticCurveTo(20,10,0,-10); }, accent, OUTLINE);
+    outlinedPath(ctx, ()=>{ ctx.beginPath(); ctx.arc(-30,-24,20,0,Math.PI*2); }, main, OUTLINE);
+    ctx.fillStyle=accent; ctx.beginPath(); ctx.moveTo(-46,-24); ctx.lineTo(-64,-18); ctx.lineTo(-46,-12); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#2b1c10'; ctx.beginPath(); ctx.arc(-34,-28,3.5,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  },
+  moon(ctx, main, accent){
+    ctx.save(); ctx.translate(128,180);
+    ctx.fillStyle = main;
+    ctx.beginPath(); ctx.arc(0,0,64,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle = OUTLINE; ctx.lineWidth=7; ctx.beginPath(); ctx.arc(0,0,64,0,Math.PI*2); ctx.stroke();
+    ctx.globalCompositeOperation='destination-out';
+    ctx.beginPath(); ctx.arc(24,-14,54,0,Math.PI*2); ctx.fill();
+    ctx.globalCompositeOperation='source-over';
+    ctx.fillStyle=accent; ctx.beginPath(); ctx.arc(-24,14,4,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(-8,30,3,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  },
+  book(ctx, main, accent){
+    ctx.save(); ctx.translate(128,190);
+    outlinedPath(ctx, ()=>{ ctx.beginPath(); ctx.roundRect(-56,-70,112,90,8); }, main, OUTLINE);
+    ctx.fillStyle='#fdf6e3'; ctx.fillRect(-48,-62,96,74);
+    ctx.strokeStyle='rgba(59,44,26,0.25)'; ctx.lineWidth=2;
+    for(let i=0;i<4;i++){ ctx.beginPath(); ctx.moveTo(-40,-44+i*18); ctx.lineTo(40,-44+i*18); ctx.stroke(); }
+    ctx.fillStyle=accent; ctx.beginPath(); ctx.moveTo(-10,-70); ctx.lineTo(10,-70); ctx.lineTo(10,-30); ctx.lineTo(0,-42); ctx.lineTo(-10,-30); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+};
+
+function makeCharacterTexture(type, main, accent){
+  const { c, ctx } = baseCanvas();
+  ctx.save();
+  ctx.globalAlpha = 0.28; ctx.fillStyle = '#000000';
+  ctx.beginPath(); ctx.ellipse(128, 244, 52, 11, 0, 0, Math.PI*2); ctx.fill();
+  ctx.restore();
+  (CHAR_DRAWERS[type] || CHAR_DRAWERS.star)(ctx, main, accent);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+/* =========================================================================
+   5. TEXTURA ACUARELA PARA PLANETAS
+   ========================================================================= */
+function makePlanetTexture(colorA, colorB){
+  const c = document.createElement('canvas'); c.width=512; c.height=256;
+  const ctx = c.getContext('2d');
+  const grad = ctx.createLinearGradient(0,0,0,256);
+  grad.addColorStop(0, colorA); grad.addColorStop(1, colorB);
+  ctx.fillStyle = grad; ctx.fillRect(0,0,512,256);
+  for(let i=0;i<14;i++){
+    const x = Math.random()*512, y = Math.random()*256, r = 30+Math.random()*90;
+    const g = ctx.createRadialGradient(x,y,0,x,y,r);
+    const light = Math.random() > 0.5;
+    g.addColorStop(0, light ? 'rgba(255,255,255,0.16)' : 'rgba(0,0,0,0.10)');
+    g.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.ellipse(x,y,r,r*0.6,Math.random()*Math.PI,0,Math.PI*2); ctx.fill();
+  }
+  ctx.strokeStyle = 'rgba(255,255,255,0.18)'; ctx.lineWidth = 1;
+  for(let i=0;i<5;i++){
+    ctx.beginPath();
+    ctx.ellipse(256, 128, 40+i*46, 128, 0, 0, Math.PI*2);
+    ctx.stroke();
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.wrapS = THREE.RepeatWrapping;
+  return tex;
+}
+
+/* =========================================================================
+   6. CONSTRUCCIÓN DE MUNDOS EN LA ESCENA
+   ========================================================================= */
+const GOLDEN_ANGLE = 2.399963229728653;
+function computeWorldPosition(index){
+  const radius = 13 + index*4.3 + (index%3)*1.6;
+  const angle = index*GOLDEN_ANGLE;
+  const height = Math.sin(index*1.35)*4.5;
+  return new THREE.Vector3(Math.cos(angle)*radius, height, Math.sin(angle)*radius);
+}
+
+const worldGroups = new Map(); // id -> { group, mesh, glow, sprite, hit, data }
+const hitMeshes = [];
+let orderedIds = [];
+
+function buildWorldObject(data, index, animateIn){
+  const pos = computeWorldPosition(index);
+  const group = new THREE.Group();
+  group.position.copy(pos);
+  scene.add(group);
+
+  const size = data.size || 1.15;
+
+  const geo = new THREE.SphereGeometry(size, 40, 40);
+  const tex = makePlanetTexture(data.colorA, data.colorB);
+  const mat = new THREE.MeshStandardMaterial({
+    map: tex, roughness: 0.85, metalness: 0.05,
+    emissive: new THREE.Color(data.colorA), emissiveIntensity: 0.1
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.rotation.z = Math.random()*0.6 - 0.3;
+  group.add(mesh);
+
+  const glowGeo = new THREE.SphereGeometry(size*1.22, 32, 32);
+  const glowMat = new THREE.MeshBasicMaterial({
+    color: new THREE.Color(data.colorA), transparent:true, opacity:0.16,
+    side: THREE.BackSide, blending: THREE.AdditiveBlending, depthWrite:false
+  });
+  const glow = new THREE.Mesh(glowGeo, glowMat);
+  group.add(glow);
+
+  const charTex = makeCharacterTexture(data.character, data.colorB, data.accent || data.colorA);
+  const spriteMat = new THREE.SpriteMaterial({ map: charTex, transparent:true });
+  const sprite = new THREE.Sprite(spriteMat);
+  const spriteScale = size*1.5;
+  sprite.scale.set(spriteScale, spriteScale, 1);
+  sprite.position.set(size*0.95, -size*0.15, size*0.55);
+  group.add(sprite);
+
+  const hitGeo = new THREE.SphereGeometry(size*1.9, 16, 16);
+  const hitMat = new THREE.MeshBasicMaterial({ transparent:true, opacity:0 });
+  const hit = new THREE.Mesh(hitGeo, hitMat);
+  hit.userData.worldId = data.id;
+  group.add(hit);
+  hitMeshes.push(hit);
+
+  if(animateIn){
+    group.scale.setScalar(0.001);
+    gsap.to(group.scale, { x:1,y:1,z:1, duration:1.1, ease:'elastic.out(1,0.6)', delay:0.05 });
+  }
+
+  worldGroups.set(data.id, { group, mesh, glow, sprite, hit, data, bobPhase: Math.random()*10 });
+  return group;
+}
+
+function rebuildAllWorlds(){
+  hitMeshes.length = 0;
+  worldGroups.forEach(w => scene.remove(w.group));
+  worldGroups.clear();
+  orderedIds = worlds.map(w => w.id);
+  worlds.forEach((w, i) => buildWorldObject(w, i, false));
+}
+rebuildAllWorlds();
+
+/* =========================================================================
+   7. NAVEGACIÓN DE CÁMARA (GSAP)
+   ========================================================================= */
+let currentWorldId = null;
+let isTransitioning = false;
+const camLookAt = new THREE.Vector3().copy(HOME_TARGET);
+
+function flyCameraTo(targetPos, targetLookAt, duration, onDone){
+  isTransitioning = true;
+  controls.enabled = false;
+  controls.autoRotate = false;
+  const camObj = { x:camera.position.x, y:camera.position.y, z:camera.position.z };
+  const lookObj = { x:camLookAt.x, y:camLookAt.y, z:camLookAt.z };
+  gsap.timeline({
+    onUpdate(){
+      camera.position.set(camObj.x, camObj.y, camObj.z);
+      camLookAt.set(lookObj.x, lookObj.y, lookObj.z);
+      camera.lookAt(camLookAt);
+    },
+    onComplete(){
+      isTransitioning = false;
+      if(onDone) onDone();
+    }
+  })
+  .to(camObj, { x:targetPos.x, y:targetPos.y, z:targetPos.z, duration, ease:'power3.inOut' }, 0)
+  .to(lookObj, { x:targetLookAt.x, y:targetLookAt.y, z:targetLookAt.z, duration, ease:'power3.inOut' }, 0);
+}
+
+function goToWorld(id){
+  const w = worldGroups.get(id);
+  if(!w || isTransitioning) return;
+  currentWorldId = id;
+  const planetPos = w.group.position;
+  const dir = planetPos.clone().normalize();
+  if(dir.lengthSq() < 0.0001) dir.set(0,0,1);
+  const dist = (w.data.size||1.15)*4.2 + 3.4;
+  const targetPos = planetPos.clone().add(dir.multiplyScalar(dist)).add(new THREE.Vector3(0, (w.data.size||1.15)*0.6, 0));
+  flyCameraTo(targetPos, planetPos, 1.9, () => openLetter(w.data.id));
+  hideHint();
+}
+
+function returnToSpace(){
+  if(isTransitioning) return;
+  currentWorldId = null;
+  closeLetterUI();
+  flyCameraTo(HOME_POS, HOME_TARGET, 1.6, () => {
+    controls.enabled = true;
+    controls.target.copy(HOME_TARGET);
+    controls.autoRotate = true;
+  });
+  gsap.to('#return-btn', { opacity:0, y:-40, duration:.35, ease:'power2.in', onComplete(){ document.getElementById('return-btn').style.pointerEvents='none'; } });
+}
+
+document.getElementById('return-btn').addEventListener('click', returnToSpace);
+
+/* =========================================================================
+   8. RAYCAST / CLICK EN PLANETAS
+   ========================================================================= */
+const raycaster = new THREE.Raycaster();
+const pointerNDC = new THREE.Vector2();
+let downPos = null, downTime = 0;
+
+function onPointerDown(e){
+  const p = e.touches ? e.touches[0] : e;
+  downPos = { x:p.clientX, y:p.clientY };
+  downTime = performance.now();
+}
+function onPointerUp(e){
+  if(!downPos) return;
+  const p = e.changedTouches ? e.changedTouches[0] : e;
+  const dx = p.clientX - downPos.x, dy = p.clientY - downPos.y;
+  const moved = Math.sqrt(dx*dx+dy*dy);
+  const dt = performance.now() - downTime;
+  downPos = null;
+  if(moved > 8 || dt > 600) return;
+  if(letterOpen || formOpen || introVisible) return;
+
+  pointerNDC.x = (p.clientX / window.innerWidth) * 2 - 1;
+  pointerNDC.y = -(p.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(pointerNDC, camera);
+  const hits = raycaster.intersectObjects(hitMeshes, false);
+  if(hits.length){
+    const id = hits[0].object.userData.worldId;
+    if(id === currentWorldId && letterOpen) return;
+    goToWorld(id);
+  }
+}
+canvas.addEventListener('mousedown', onPointerDown);
+canvas.addEventListener('mouseup', onPointerUp);
+canvas.addEventListener('touchstart', onPointerDown, { passive:true });
+canvas.addEventListener('touchend', onPointerUp);
+
+canvas.addEventListener('mousemove', (e) => {
+  if(letterOpen || formOpen) return;
+  const hits = (() => {
+    pointerNDC.x = (e.clientX / window.innerWidth) * 2 - 1;
+    pointerNDC.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    raycaster.setFromCamera(pointerNDC, camera);
+    return raycaster.intersectObjects(hitMeshes, false);
+  })();
+  canvas.style.cursor = hits.length ? 'pointer' : 'grab';
+});
+
+/* =========================================================================
+   9. UI: CARTA / MODAL
+   ========================================================================= */
+let letterOpen = false;
+const letterWrap = document.getElementById('letter-wrap');
+const letterCard = document.getElementById('letter-card');
+
+function openLetter(id){
+  const w = worldGroups.get(id);
+  if(!w) return;
+  const d = w.data;
+  document.getElementById('letter-eyebrow').textContent = CHAR_LABELS[d.character] || '✦';
+  document.getElementById('letter-title').textContent = d.name;
+  document.getElementById('letter-subtitle').textContent = d.subtitle;
+  document.getElementById('letter-body').textContent = d.letter;
+  document.getElementById('btn-edit-world').style.display = d.custom ? 'inline-block' : 'none';
+  document.getElementById('btn-delete-world').style.display = d.custom ? 'inline-block' : 'none';
+
+  letterWrap.style.display = 'flex';
+  letterOpen = true;
+  gsap.fromTo(letterCard, { opacity:0, scale:0.85, y:24 }, { opacity:1, scale:1, y:0, duration:0.65, ease:'back.out(1.5)' });
+  gsap.fromTo('#letter-backdrop', { opacity:0 }, { opacity:1, duration:0.5 });
+
+  const retBtn = document.getElementById('return-btn');
+  retBtn.style.pointerEvents='auto';
+  gsap.to(retBtn, { opacity:1, y:0, duration:.4, ease:'power2.out', delay:.15 });
+}
+
+function closeLetterUI(){
+  if(!letterOpen){ letterWrap.style.display='none'; return; }
+  letterOpen = false;
+  gsap.to(letterCard, { opacity:0, scale:0.9, y:16, duration:0.35, ease:'power2.in',
+    onComplete(){ letterWrap.style.display='none'; } });
+}
+
+document.getElementById('letter-close').addEventListener('click', () => {
+  returnToSpace();
+});
+document.getElementById('letter-backdrop').addEventListener('click', () => {
+  returnToSpace();
+});
+document.getElementById('btn-next-world').addEventListener('click', () => {
+  if(!currentWorldId || isTransitioning) return;
+  const idx = orderedIds.indexOf(currentWorldId);
+  const nextIdx = (idx + 1) % orderedIds.length;
+  closeLetterUI();
+  setTimeout(() => goToWorld(orderedIds[nextIdx]), 200);
+});
+
+/* =========================================================================
+   10. UI: CREAR / EDITAR MUNDO
+   ========================================================================= */
+const formWrap = document.getElementById('form-wrap');
+const formCard = document.getElementById('form-card');
+let formOpen = false;
+let editingId = null;
+let selectedChar = 'rose';
+
+const charChipsWrap = document.getElementById('char-preview');
+Object.keys(CHAR_LABELS).forEach(key => {
+  const chip = document.createElement('div');
+  chip.className = 'char-chip' + (key===selectedChar ? ' active' : '');
+  chip.textContent = CHAR_LABELS[key];
+  chip.dataset.char = key;
+  chip.addEventListener('click', () => {
+    selectedChar = key;
+    [...charChipsWrap.children].forEach(c => c.classList.toggle('active', c.dataset.char === key));
+  });
+  charChipsWrap.appendChild(chip);
+});
+
+document.getElementById('f-size').addEventListener('input', (e) => {
+  document.getElementById('f-size-val').textContent = parseFloat(e.target.value).toFixed(2);
+});
+
+function openForm(worldId){
+  editingId = worldId || null;
+  const title = document.getElementById('form-title');
+  const submitBtn = document.getElementById('btn-submit-form');
+
+  if(editingId){
+    const d = worldGroups.get(editingId).data;
+    title.textContent = 'Editar mundo';
+    submitBtn.textContent = 'Guardar cambios ✦';
+    document.getElementById('f-name').value = d.name;
+    document.getElementById('f-subtitle').value = d.subtitle;
+    document.getElementById('f-letter').value = d.letter;
+    document.getElementById('f-color1').value = d.colorA;
+    document.getElementById('f-color2').value = d.accent || d.colorB;
+    document.getElementById('f-size').value = d.size;
+    document.getElementById('f-size-val').textContent = (d.size).toFixed(2);
+    selectedChar = d.character;
+  } else {
+    title.textContent = 'Crear un mundo nuevo';
+    submitBtn.textContent = 'Crear mundo ✦';
+    document.getElementById('f-name').value = '';
+    document.getElementById('f-subtitle').value = '';
+    document.getElementById('f-letter').value = '';
+    document.getElementById('f-color1').value = '#e8b4bc';
+    document.getElementById('f-color2').value = '#8a6bbf';
+    document.getElementById('f-size').value = 1.15;
+    document.getElementById('f-size-val').textContent = '1.15';
+    selectedChar = 'rose';
+  }
+  [...charChipsWrap.children].forEach(c => c.classList.toggle('active', c.dataset.char === selectedChar));
+
+  formWrap.style.display = 'flex';
+  formOpen = true;
+  gsap.fromTo(formCard, { opacity:0, scale:0.9, y:20 }, { opacity:1, scale:1, y:0, duration:0.5, ease:'back.out(1.4)' });
+  gsap.fromTo('#form-backdrop', { opacity:0 }, { opacity:1, duration:0.4 });
+}
+function closeForm(){
+  formOpen = false;
+  gsap.to(formCard, { opacity:0, scale:0.92, y:14, duration:0.3, ease:'power2.in',
+    onComplete(){ formWrap.style.display='none'; } });
+}
+document.getElementById('btn-create').addEventListener('click', () => openForm(null));
+document.getElementById('btn-cancel-form').addEventListener('click', closeForm);
+document.getElementById('form-backdrop').addEventListener('click', closeForm);
+
+function lighten(hex, amt){
+  const c = new THREE.Color(hex);
+  const hsl = {}; c.getHSL(hsl);
+  c.setHSL(hsl.h, hsl.s, Math.min(1, hsl.l + amt));
+  return '#' + c.getHexString();
+}
+
+document.getElementById('btn-submit-form').addEventListener('click', () => {
+  const name = document.getElementById('f-name').value.trim();
+  const subtitle = document.getElementById('f-subtitle').value.trim();
+  const letter = document.getElementById('f-letter').value.trim();
+  const color1 = document.getElementById('f-color1').value;
+  const color2 = document.getElementById('f-color2').value;
+  const size = parseFloat(document.getElementById('f-size').value);
+
+  if(!name || !letter){
+    showToast('Ponle al menos un nombre y una carta ✦');
+    return;
+  }
+
+  if(editingId){
+    const w = worldGroups.get(editingId);
+    Object.assign(w.data, {
+      name, subtitle, letter, character: selectedChar,
+      colorA: color1, colorB: lighten(color1, -0.12), accent: color2, size
+    });
+    scene.remove(w.group);
+    worldGroups.delete(editingId);
+    const idx = worlds.findIndex(x => x.id === editingId);
+    buildWorldObject(w.data, idx, true);
+    orderedIds = worlds.map(w2 => w2.id);
+    persistCustom();
+    showToast('Mundo actualizado ✦');
+    closeForm();
+    return;
+  }
+
+  const newData = {
+    id: 'w' + Date.now(),
+    name, subtitle, letter,
+    character: selectedChar,
+    colorA: color1,
+    colorB: lighten(color1, -0.12),
+    accent: color2,
+    size,
+    custom: true
+  };
+  worlds.push(newData);
+  orderedIds = worlds.map(w => w.id);
+  buildWorldObject(newData, worlds.length-1, true);
+  persistCustom();
+  showToast('Tu mundo ha nacido ✦');
+  closeForm();
+});
+
+document.getElementById('btn-edit-world').addEventListener('click', () => {
+  if(currentWorldId) openForm(currentWorldId);
+});
+document.getElementById('btn-delete-world').addEventListener('click', () => {
+  if(!currentWorldId) return;
+  if(!confirm('¿Eliminar este mundo para siempre?')) return;
+  const id = currentWorldId;
+  const w = worldGroups.get(id);
+  scene.remove(w.group);
+  worldGroups.delete(id);
+  worlds = worlds.filter(x => x.id !== id);
+  orderedIds = worlds.map(w2 => w2.id);
+  hitMeshes.length = 0;
+  worldGroups.forEach(w2 => hitMeshes.push(w2.hit));
+  persistCustom();
+  closeLetterUI();
+  currentWorldId = null;
+  document.getElementById('return-btn').click();
+  showToast('El mundo se disolvió entre las estrellas');
+});
+
+/* =========================================================================
+   11. TOAST
+   ========================================================================= */
+let toastTween;
+function showToast(msg){
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  if(toastTween) toastTween.kill();
+  toastTween = gsap.timeline()
+    .to(el, { opacity:1, y:0, duration:0.4, ease:'power2.out' })
+    .to(el, { opacity:0, y:-20, duration:0.4, ease:'power2.in', delay:2.2 });
+}
+
+/* =========================================================================
+   12. INTRO
+   ========================================================================= */
+let introVisible = true;
+function startExperience(){
+  introVisible = false;
+  const tl = gsap.timeline();
+  tl.to('#intro', { opacity:0, duration:0.9, ease:'power2.inOut', onComplete(){ document.getElementById('intro').style.display='none'; } });
+  gsap.to('#top-bar', { opacity:1, duration:0.8, ease:'power2.out', delay:0.4 });
+  gsap.to('#hint', { opacity:1, duration:0.8, ease:'power2.out', delay:0.9 });
+  controls.enabled = true;
+  hintTimer();
+}
+document.getElementById('intro-start').addEventListener('click', startExperience);
+
+gsap.timeline({ delay:0.2 })
+  .to('#intro .eyebrow', { opacity:1, y:0, duration:0.7, ease:'power2.out' }, 0)
+  .fromTo('#intro h1', { opacity:0, y:16 }, { opacity:1, y:0, duration:0.9, ease:'power2.out' }, 0.15)
+  .fromTo('#intro p', { opacity:0, y:16 }, { opacity:1, y:0, duration:0.9, ease:'power2.out' }, 0.35)
+  .fromTo('#intro-start', { opacity:0, y:16 }, { opacity:1, y:0, duration:0.8, ease:'power2.out' }, 0.55);
+
+function hideHint(){ gsap.to('#hint', { opacity:0, duration:0.5 }); }
+function hintTimer(){ setTimeout(() => { if(!letterOpen) hideHint(); }, 7000); }
+
+/* =========================================================================
+   13. LOOP DE ANIMACIÓN
+   ========================================================================= */
+const clock = new THREE.Clock();
+let mouseTarget = new THREE.Vector2(0,0);
+window.addEventListener('mousemove', (e) => {
+  mouseTarget.x = (e.clientX/window.innerWidth - 0.5) * 2;
+  mouseTarget.y = (e.clientY/window.innerHeight - 0.5) * 2;
+});
+
+function animate(){
+  requestAnimationFrame(animate);
+  const t = clock.getElapsedTime();
+  const dt = clock.getDelta();
+
+  worldGroups.forEach(w => {
+    w.mesh.rotation.y += dt * 0.12;
+    const bob = Math.sin(t*1.1 + w.bobPhase) * 0.06;
+    w.sprite.position.y = -( (w.data.size||1.15)*0.15 ) + bob;
+  });
+
+  starsNear.rotation.y += dt*0.002;
+  starsFar.rotation.y -= dt*0.0012;
+  starsNear.rotation.x += (mouseTarget.y*0.02 - starsNear.rotation.x)*0.01;
+
+  nebulae.forEach((n,i) => { n.rotation += 0; n.material.rotation += dt*0.01*(i%2===0?1:-1); });
+
+  if(!isTransitioning && controls.enabled){
+    controls.update();
+  }
+  renderer.render(scene, camera);
+}
+animate();
+
+/* =========================================================================
+   14. RESIZE / KEYS
+   ========================================================================= */
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+window.addEventListener('keydown', (e) => {
+  if(e.key === 'Escape'){
+    if(formOpen) closeForm();
+    else if(letterOpen) returnToSpace();
+  }
+});
+</script>
+</body>
+</html>

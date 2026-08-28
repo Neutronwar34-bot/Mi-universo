@@ -1,0 +1,9 @@
+{
+  "tracks": [
+    { "title": "Andata", "src": "/audio/Andata.mp3" },
+    { "title": "BB", "src": "/audio/BB.mp3" },
+    { "title": "for Jóhann", "src": "/audio/for Jóhann.mp3" },
+    { "title": "Lack of Love", "src": "/audio/Lack of Love.mp3" },
+    { "title": "Solitude", "src": "/audio/Solitude.mp3" }
+  ]
+}
